@@ -1,0 +1,5 @@
+Provisioning-with-Terraform/ec2-create/.terraform/
+Provisioning-with-Terraform/ec2-create/terraform.tfstate
+Provisioning-with-Terraform/ec2-create/terraform.tfstate.backup
+Provisioning-with-Terraform/terraform-aws-webinfra/.terraform/
+Provisioning-with-Terraform/terraform-aws-webinfra/.terraform.lock.hcl
