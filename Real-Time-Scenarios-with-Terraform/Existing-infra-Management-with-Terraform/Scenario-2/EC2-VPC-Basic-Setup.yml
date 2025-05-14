@@ -1,0 +1,79 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+Description: Basic EC2 environment with VPC, Subnet, Security Group, and EC2 instance.
+Resources:
+  MyVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: MyVPC
+  MySubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: MyVPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone:
+        - 0
+        - ""
+      Tags:
+        - Key: Name
+          Value: MySubnet
+  MyInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: MyIGW
+  MyVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: MyVPC
+      InternetGatewayId: MyInternetGateway
+  MyRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: MyVPC
+  MyRoute:
+    Type: AWS::EC2::Route
+    DependsOn: MyVPCGatewayAttachment
+    Properties:
+      RouteTableId: MyRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: MyInternetGateway
+  MySubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: MySubnet
+      RouteTableId: MyRouteTable
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH
+      VpcId: MyVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: MySG
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0e35ddab05955cf57
+      InstanceType: t2.micro
+      KeyName: NewKey
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId: MySubnet
+          GroupSet:
+            - MySecurityGroup
+      Tags:
+        - Key: Name
+          Value: CF-EC2
