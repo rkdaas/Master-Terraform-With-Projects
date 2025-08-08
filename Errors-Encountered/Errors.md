@@ -39,7 +39,6 @@ Only use this after confirming no other Terraform operation is running.
 
 - Avoid interrupting Terraform runs.
 - Pull the latest code before running any plan.
-- Use CI/CD pipelines for applies; avoid manual applies in production.
 - Enable state lock protection (DynamoDB).
 - Monitor the lock table for stuck locks.
 - Set up CI alerts for failed jobs.
@@ -53,3 +52,37 @@ Only use this after confirming no other Terraform operation is running.
 - Team conflicts.
 - Infrastructure drift or downtime.
 
+## Terraform Error-2: `state data in S3 does not have the expected content`
+
+```text
+The checksum calculated for the state stored in S3 does not match the checksum
+stored in DynamoDB.
+
+Calculated checksum: fa6f7a4ca23cbfd52a45d176d77d2b2c
+Stored checksum:     20bb69142bf5c90c91a6421f5d8e9c73
+```
+
+### What Does It Mean?
+
+- Terraform uses **DynamoDB** to store the **digest/checksum** of the `.tfstate` file for locking and consistency.
+- When you restore a previous version of `.tfstate` from S3, the checksum changes.
+- DynamoDB still holds the old checksum, which no longer matches the file in S3.
+
+---
+
+### Solution
+
+Update the digest manually:
+
+1. Go to AWS DynamoDB Console.
+2. Open your table (e.g., `terraform-locks`).
+3. Find the item with `LockID = webinfra/terraform.tfstate`.
+4. Update the `Digest` value to match the new Calculated checksum shown in the `terraform plan` error.
+
+---
+
+### Is It Required Every Time?
+
+Yes whenever you restore an older version of the `terraform.tfstate` file, the checksum will differ, and you'll need to manually update the digest in DynamoDB.
+
+---
